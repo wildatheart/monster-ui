@@ -5,11 +5,12 @@ As of now, in order to see your app inside the app store, you need to manually a
 
 Now click on "New Document", and we'll create that document.
 
+(If you're adding an app that already exists, like accounts, voip, numbers, you can get all the metadata needed to create these files in their own `metadata` folder)
+
 
 	{
    	   "name": "appName",
    	   "api_url": "http://yourServer/apiUrl",
-   	   "source_url": "http://yourServer/monster-modules/appName",
    	   "i18n": {
        	   "en-US": {
            	   "label": "Friendly App Name",
@@ -31,8 +32,8 @@ Now click on "New Document", and we'll create that document.
    	   "price": 0,
    	   "icon": "nameOfIcon.png",
    	   "screenshots": [
-			"nameOfImage1.png",
-			"nameOfImage2.png"
+  			"nameOfImage1.png",
+  			"nameOfImage2.png"
    	   ],
 	   "pvt_type": "app"
 	}

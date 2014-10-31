@@ -6,7 +6,12 @@ define(function(require){
 	var app = {
 		name: 'skeleton',
 
-		i18n: [ 'en-US', 'fr-FR' ],
+		css: [ 'app' ],
+
+		i18n: { 
+			'en-US': { customCss: false },
+			'fr-FR': { customCss: false }
+		},
 
 		// Defines API requests not included in the SDK
 		requests: {},
@@ -38,7 +43,7 @@ define(function(require){
 		render: function(container){
 			var self = this,
 				skeletonTemplate = $(monster.template(self, 'layout')),
-				parent = _.isEmpty(container) ? $('#ws-content') : container;
+				parent = _.isEmpty(container) ? $('#monster-content') : container;
 
 			//self.bindEvents(skeletonTemplate);
 

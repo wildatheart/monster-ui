@@ -7,8 +7,7 @@ define(function(){
 		defaultLanguage: 'en-US',
 
 		monsterizeApp: function(app, callback) {
-			var self = this,
-				css = app.appPath + '/app.css';
+			var self = this;
 
 			_.each(app.requests, function(request, id){
 				monster._defineRequest(id, request, app);
@@ -20,20 +19,125 @@ define(function(){
 				monster.sub(topic, cb, app);
 			});
 
-			if(monster._fileExists(css)){
-				monster.css(css);
+			self._addAppCss(app);
+
+			self._addAppI18n(app);
+
+			app.apiUrl = app.apiUrl || monster.config.api.default;
+
+			app.callApi = function(params) {
+				var apiSplit = params.resource.split('.'),
+					module = apiSplit[0],
+					method = apiSplit[1],
+					successCallback = params.success,
+					errorCallback = params.error;
+					
+				if(apiSplit.length === 2 && module in monster.kazooSdk && method in monster.kazooSdk[module]) {
+
+					//Handling special cases:
+					switch(params.resource) {
+						case 'account.update': {
+							if(params.data.accountId === monster.apps['auth'].currentAccount.id) {
+								successCallback = function(data, status) {
+									monster.apps['auth'].currentAccount = data.data;
+									monster.pub('auth.currentAccountUpdated', data.data);
+
+									params.success && params.success(data, status);
+								}
+							}
+							break;
+						}
+					}
+
+					var apiSettings = $.extend({
+							authToken: app.authToken,
+							apiRoot: params.apiUrl || app.apiUrl || monster.config.api.default,
+							uiMetadata: {
+								version: monster.config.version,
+								ui: 'monster-ui'
+							},
+							success: successCallback,
+							error: errorCallback
+						}, params.data);
+
+					return monster.kazooSdk[module][method](apiSettings);
+				} else {
+					console.error('This api does not exist. Module: ' + module + ', Method: ' + method);
+				}
+			};
+
+			monster.apps[app.name] = app;
+
+			self.loadDependencies(app, function() {
+				app.load(callback);
+			});
+		},
+
+		loadDependencies: function(app, globalCallback) {
+			var self = this,
+				listRequests = {},
+				externalPath = app.appPath + '/external/',
+				deps = app.externalScripts || [];
+
+			if(deps.length > 0) {
+				_.each(deps, function(name) {
+					listRequests[name] = function(callback) {
+						monster.getScript(externalPath + name + '.js', function() {
+							callback(null, {});
+						});
+					}
+				});
+
+				monster.parallel(listRequests, function(err, results) {
+					globalCallback && globalCallback();
+				});
 			}
+			else {
+				globalCallback && globalCallback();
+			}
+		},
+
+		_addAppCss: function(app) {
+			var self = this,
+				listCss = app.css || [],
+				currentLanguage = monster.config.whitelabel.language,
+				addCss = function(fileName) {
+					fileName = app.appPath + '/style/' + fileName + '.css';
+
+					if(monster._fileExists(fileName)){
+						monster.css(fileName);
+					}
+					else {
+						console.info('File Name doesn\'t exist: ', fileName);
+					}
+				};
+
+			// If the current UI Language is not the default of the Monster UI, see if we have a specific i18n file to load
+			if(currentLanguage !== self.defaultLanguage) {
+				if(currentLanguage in app.i18n && app.i18n[currentLanguage].customCss === true) {
+					listCss.push('cssI18n/' + currentLanguage);
+				}
+			}
+
+			_.each(listCss, function(fileName) {
+				addCss(fileName);
+			});
+		},
+
+		_addAppI18n: function(app) {
+			var self = this,
+				currentLanguage = monster.config.whitelabel.language;
 
 			_.extend(app.data, { i18n: {} });
 
 			// en-US is the default language of Monster
-			var customLanguage = app.i18n.indexOf(monster.config.language) >= 0 ? monster.config.language : self.defaultLanguage,
+			var customLanguage = currentLanguage in app.i18n >= 0 ? currentLanguage : self.defaultLanguage,
 				// Once all the different i18n files are loaded, we need to append the core i18n to the app
 				addCoreI18n = function() {
 					if('core' in monster.apps) {
 						$.extend(true, app.data.i18n, monster.apps.core.data.i18n);
 					}
-				}
+				};
 
 			self.loadLocale(app, self.defaultLanguage, function() {
 				// If the app supports the custom language, then we load its json file if its not the default one
@@ -50,40 +154,10 @@ define(function(){
 			// add an active property method to the i18n array within the app.
 			_.extend(app.i18n, {
 				active: function(){
-					var language = app.i18n.indexOf(monster.config.language) >= 0 ? monster.config.language : self.defaultLanguage;
-
+					var language = currentLanguage in app.i18n ? currentLanguage : self.defaultLanguage;
 					return app.data.i18n[language];
 				}
 			});
-
-			app.apiUrl = app.apiUrl || monster.config.api.default;
-
-			app.callApi = function(params) {
-				var apiSplit = params.resource.split('.'),
-					module = apiSplit[0],
-					method = apiSplit[1];
-					
-				if(apiSplit.length === 2 && module in monster.kazooSdk && method in monster.kazooSdk[module]) {
-					var apiSettings = $.extend({
-							authToken: app.authToken,
-							apiRoot: params.apiUrl || app.apiUrl || monster.config.api.default,
-							uiMetadata: {
-								version: monster.config.version,
-								ui: 'monster-ui'
-							},
-							success: params.success,
-							error: params.error
-						}, params.data);
-
-					return monster.kazooSdk[module][method](apiSettings);
-				} else {
-					console.error('This api does not exist. Module: ' + module + ', Method: ' + method);
-				}
-			}
-
-			monster.apps[app.name] = app;
-
-			app.load(callback);
 		},
 
 		_loadApp: function(name, callback, options){

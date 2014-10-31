@@ -250,8 +250,11 @@ define(function(require){
 			if(!raw){
 				_template = handlebars.compile(_template);
 
-				var i18n = app.i18n.active(),
-				context = _.extend({}, data || {}, { i18n: i18n });
+				var i18n = app.i18n.active();
+
+				i18n._whitelabel = monster.config.whitelabel;
+
+				var context = _.extend({}, data || {}, { i18n: i18n });
 
 				result = _template(context);
 			}
@@ -296,6 +299,12 @@ define(function(require){
 					callback(version);
 				}
 			});
+		},
+
+		getScript: function(url, callback) {
+			var self = this;
+
+			$.getScript(url, callback);
 		},
 
 		querystring: function (key) {

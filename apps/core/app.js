@@ -6,7 +6,12 @@ define(function(require){
 	var app = {
 		name: 'core',
 
-		i18n: [ 'en-US', 'fr-FR' ],
+		css: [ 'app' ],
+
+		i18n: {
+			'en-US': { customCss: false },
+			'fr-FR': { customCss: false }
+		},
 
 		requests: {},
 
@@ -37,7 +42,7 @@ define(function(require){
 			var self = this,
 				mainTemplate = $(monster.template(self, 'app', {}));
 				
-			document.title = 'Monster UI - ' + monster.config.company.name;
+			document.title = monster.config.whitelabel.applicationTitle;
 
 			self.bindEvents(mainTemplate);
 
@@ -53,7 +58,7 @@ define(function(require){
 			var self = this;
 
 			monster.apps.load('auth', function(app){
-				app.render($('#ws-content'));
+				app.render($('#monster-content'));
 			});
 		},
 
@@ -98,7 +103,7 @@ define(function(require){
 				if(typeof defaultApp !== 'undefined') {
 					monster.apps.load(defaultApp, function(app) {
 						self.showAppName(defaultApp);
-						app.render($('#ws-content'));
+						app.render($('#monster-content'));
 					});
 				}
 				else {
@@ -153,17 +158,17 @@ define(function(require){
 				}
 			});
 
-			if(monster.config.hasOwnProperty('nav')) {
-				if(monster.config.nav.hasOwnProperty('help')) {
+			if(monster.config.whitelabel.hasOwnProperty('nav')) {
+				if(monster.config.whitelabel.nav.hasOwnProperty('help') && monster.config.whitelabel.nav.help.length > 0) {
 					container.find('#ws-navbar a.help')
 							 .unbind('click')
-							 .attr('href', monster.config.nav.help);
+							 .attr('href', monster.config.whitelabel.nav.help);
 				}
 
-				if(monster.config.nav.hasOwnProperty('logout')) {
-					container.find('#ws-navbar .links .logout')
+				if(monster.config.whitelabel.nav.hasOwnProperty('logout') && monster.config.whitelabel.nav.logout.length > 0) {
+					container.find('#ws-navbar .links a.signout')
 							 .unbind('click')
-							 .attr('href', monster.config.nav.logout);
+							 .attr('href', monster.config.whitelabel.nav.logout);
 				}
 			}
 		},
@@ -194,7 +199,7 @@ define(function(require){
 					container.find('#ws-navbar .logo').css('background-image', 'url(' + apiUrl + 'whitelabel/' + domain + '/logo?_='+new Date().getTime()+')');
 				},
 				error: function(error) {
-					container.find('#ws-navbar .logo').css('background-image', 'url("apps/core/static/images/logo.png")');
+					container.find('#ws-navbar .logo').css('background-image', 'url("apps/core/style/static/images/logo.png")');
 				}
 			});
 		},

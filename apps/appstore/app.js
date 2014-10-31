@@ -7,9 +7,14 @@ define(function(require){
 
 	var app = {
 
-		name: "appstore",
+		name: 'appstore',
 
-		i18n: [ 'en-US' ],
+		css: [ 'app' ],
+
+		i18n: { 
+			'en-US': { customCss: false },
+			'fr-FR': { customCss: false }
+		},
 
 		requests: {
 			'appstore.list': {
@@ -58,7 +63,7 @@ define(function(require){
 		render: function(container) {
 			var self = this,
 				template = $(monster.template(self, 'app')),
-				parent = container || $('#ws-content');
+				parent = container || $('#monster-content');
 
 			self.loadData(function(appstoreData) {
 				self.renderApps(template, appstoreData);
@@ -182,7 +187,7 @@ define(function(require){
 									val.tags ? val.tags.push("installed") : val.tags = ["installed"];
 								}
 							}
-							var i18n = val.i18n[monster.config.language] || val.i18n['en-US'];
+							var i18n = val.i18n[monster.config.whitelabel.language] || val.i18n['en-US'];
 
 							val.label = i18n.label;
 							val.description = i18n.description;
@@ -239,7 +244,7 @@ define(function(require){
 					appId: appId
 				},
 				success: function(data, status) {
-					dataI18n = data.data.i18n[monster.config.language] || data.data.i18n['en-US'];
+					dataI18n = data.data.i18n[monster.config.whitelabel.language] || data.data.i18n['en-US'];
 
 					var app = $.extend(true, data.data, {
 							extra: {

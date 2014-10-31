@@ -163,10 +163,7 @@
 			}
 		},
 		"title": {
-			"fontSize": "Taille de la police",
-			"huge": "Grand",
-			"normal": "Normale",
-			"small" : "Petit",
+			"fontSize": "Taille du text",
 
 			"bold": "Gras (Ctrl/Cmd+B)",
 			"italic": "Italique (Ctrl/Cmd+I)",
@@ -189,9 +186,8 @@
 			"reduceIndent": "Mettre en retrait (Shift+Tab)",
 			"indent": "Mettre en alignéa (Tab)",
 
-			"hyperlink": "Lien hypertexte",
-			"add": "Ajouter",
-			"removeHyperlink": "Supprimer le lien hypertexte",
+			"createLink": "Lien hypertexte",
+			"removeLink": "Supprimer le lien hypertexte",
 
 			"upload": "Télécharger une image (ou glisser-déposer)",
 
@@ -201,6 +197,43 @@
 			"horizontalRule": "Règle horizontal",
 
 			"macro": "Macro"
+		},
+		"text": {
+			"big": "Grand",
+			"normal": "Normal",
+			"small" : "Petit",
+		},
+		"placeholder": {
+			"createLink": "URL"
+		}
+	},
+	"calendar": {
+		"suffix": {
+			"am": "AM",
+			"pm": "PM"
+		},
+		"day": {
+			"0": "Dimanche",
+			"1": "Lundi",
+			"2": "Mardi",
+			"3": "Mercredi",
+			"4": "Jeudi",
+			"5": "Vendredi",
+			"6": "Samedi"
+		},
+		"month": {
+			"0": "Janvier",
+			"1": "Février",
+			"2": "Mars",
+			"3": "Avril",
+			"4": "Mai",
+			"5": "Juin",
+			"6": "Juillet",
+			"7": "Août",
+			"8": "Septembre",
+			"9": "Octobre",
+			"10": "Novembre",
+			"11": "Décembre"
 		}
 	}
 }

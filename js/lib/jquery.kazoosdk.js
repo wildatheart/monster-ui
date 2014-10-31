@@ -66,20 +66,26 @@
 			'list': { verb: 'GET', url: 'accounts/{accountId}/resource_templates' }
 		},
 		localResources: {
-			'get': { verb: 'GET', url: 'accounts/{accountId}/local_resources/{resourceId}' },
-			'create': { verb: 'PUT', url: 'accounts/{accountId}/local_resources' },
-			'update': { verb: 'POST', url: 'accounts/{accountId}/local_resources/{resourceId}' },
-			'delete': { verb: 'DELETE', url: 'accounts/{accountId}/local_resources/{resourceId}' },
-			'list': { verb: 'GET', url: 'accounts/{accountId}/local_resources' },
-			'updateCollection': { verb: 'POST', url: 'accounts/{accountId}/local_resources/collection' }
+			'get': { verb: 'GET', url: 'accounts/{accountId}/resources/{resourceId}' },
+			'create': { verb: 'PUT', url: 'accounts/{accountId}/resources' },
+			'update': { verb: 'POST', url: 'accounts/{accountId}/resources/{resourceId}' },
+			'delete': { verb: 'DELETE', url: 'accounts/{accountId}/resources/{resourceId}' },
+			'list': { verb: 'GET', url: 'accounts/{accountId}/resources' },
+			'updateCollection': { verb: 'POST', url: 'accounts/{accountId}/resources/collection' },
+			'listJobs': { verb: 'GET', url: 'accounts/{accountId}/resources/jobs' },
+			'getJob': { verb: 'GET', url: 'accounts/{accountId}/resources/jobs/{jobId}' },
+			'createJob':  { verb: 'PUT', url: 'accounts/{accountId}/resources/jobs' }
 		},
 		globalResources: {
-			'get': { verb: 'GET', url: 'accounts/{accountId}/global_resources/{resourceId}' },
-			'create': { verb: 'PUT', url: 'accounts/{accountId}/global_resources' },
-			'update': { verb: 'POST', url: 'accounts/{accountId}/global_resources/{resourceId}' },
-			'delete': { verb: 'DELETE', url: 'accounts/{accountId}/global_resources/{resourceId}' },
-			'list': { verb: 'GET', url: 'accounts/{accountId}/global_resources' },
-			'updateCollection': { verb: 'POST', url: 'accounts/{accountId}/global_resources/collection' }
+			'get': { verb: 'GET', url: 'resources/{resourceId}' },
+			'create': { verb: 'PUT', url: 'resources' },
+			'update': { verb: 'POST', url: 'resources/{resourceId}' },
+			'delete': { verb: 'DELETE', url: 'resources/{resourceId}' },
+			'list': { verb: 'GET', url: 'resources' },
+			'updateCollection': { verb: 'POST', url: 'resources/collection' },
+			'listJobs': { verb: 'GET', url: 'resources/jobs' },
+			'getJob': { verb: 'GET', url: 'resources/jobs/{jobId}' },
+			'createJob':  { verb: 'PUT', url: 'resources/jobs' }
 		},
 		ips: {
 			'add': { verb: 'POST', url: 'accounts/{accountId}/ips/{ip}' },
@@ -136,11 +142,11 @@
 			'getStatus': { verb: 'GET', url: 'accounts/{accountId}/devices/status' }
 		},
 		media: {
-			'get': { verb: 'GET', url: 'accounts/{accountId}/medias/{mediaId}' },
-			'create': { verb: 'PUT', url: 'accounts/{accountId}/medias' },
-			'update': { verb: 'POST', url: 'accounts/{accountId}/medias/{mediaId}' },
-			'delete': { verb: 'DELETE', url: 'accounts/{accountId}/medias/{mediaId}' },
-			'list': { verb: 'GET', url: 'accounts/{accountId}/medias' },
+			'get': { verb: 'GET', url: 'accounts/{accountId}/media/{mediaId}' },
+			'create': { verb: 'PUT', url: 'accounts/{accountId}/media' },
+			'update': { verb: 'POST', url: 'accounts/{accountId}/media/{mediaId}' },
+			'delete': { verb: 'DELETE', url: 'accounts/{accountId}/media/{mediaId}' },
+			'list': { verb: 'GET', url: 'accounts/{accountId}/media' },
 			'upload': { verb: 'POST', url: 'accounts/{accountId}/media/{mediaId}/raw', type: 'application/x-base64' }
 		},
 		menu: {
@@ -206,11 +212,11 @@
 			'list': { verb: 'GET', url: 'accounts/{accountId}/port_requests' },
 			'listDescendants': { verb: 'GET', url: 'accounts/{accountId}/port_requests/descendants' },
 			'listAttachments': { verb: 'GET', url: 'accounts/{accountId}/port_requests/{portRequestId}/attachments' },
-			'getAttachment': { verb: 'GET', url: 'accounts/{accountId}/port_requests/{portRequestId}/attachments/{documentName}', type: 'application/pdf', dataType: 'application/pdf' },
-			'createAttachment': { verb: 'PUT', url: 'accounts/{accountId}/port_requests/{portRequestId}/attachments?filename={documentName}', type: 'application/pdf', dataType: 'application/pdf' },
-			'updateAttachment': { verb: 'POST', url: 'accounts/{accountId}/port_requests/{portRequestId}/attachments/{documentName}', type: 'application/pdf', dataType: 'application/pdf' },
-			'deleteAttachment': { verb: 'DELETE', url: 'accounts/{accountId}/port_requests/{portRequestId}/attachments/{documentName}', type: 'application/pdf', dataType: 'application/pdf' },
-			'setReady': { verb: 'PUT', url: 'accounts/{accountId}/port_requests/{portRequestId}/ready' }
+			'getAttachment': { verb: 'GET', url: 'accounts/{accountId}/port_requests/{portRequestId}/attachments/{documentName}', type: 'application/pdf' },
+			'createAttachment': { verb: 'PUT', url: 'accounts/{accountId}/port_requests/{portRequestId}/attachments?filename={documentName}', type: 'application/pdf' },
+			'updateAttachment': { verb: 'POST', url: 'accounts/{accountId}/port_requests/{portRequestId}/attachments/{documentName}', type: 'application/pdf' },
+			'deleteAttachment': { verb: 'DELETE', url: 'accounts/{accountId}/port_requests/{portRequestId}/attachments/{documentName}', type: 'application/pdf' },
+			'changeState': { verb: 'POST', url: 'accounts/{accountId}/port_requests/{portRequestId}/{state}' }
 		},
 		whitelabel: {
 			'getByDomain': { verb: 'GET', url: 'whitelabel/{domain}' },
@@ -218,11 +224,20 @@
 			'getWelcomeByDomain': { verb: 'GET', url: 'whitelabel/{domain}/welcome' },
 			'get': { verb: 'GET', url: 'accounts/{accountId}/whitelabel' },
 			'getLogo': { verb: 'GET', url: 'accounts/{accountId}/whitelabel/logo' },
-			'getWelcome': { verb: 'GET', url: 'accounts/{accountId}/whitelabel/welcome', type: 'text/html', dataType: 'text/html' },
+			'getWelcome': { verb: 'GET', url: 'accounts/{accountId}/whitelabel/welcome', type: 'text/html', dataType: 'html' },
 			'update': { verb: 'POST', url: 'accounts/{accountId}/whitelabel' },
 			'updateLogo': { verb: 'POST', url: 'accounts/{accountId}/whitelabel/logo', type: 'application/x-base64' },
-			'updateWelcome': { verb: 'POST', url: 'accounts/{accountId}/whitelabel/welcome', type: 'text/html', dataType: 'text/html' },
-			'delete': { verb: 'DELETE', url: 'accounts/{accountId}/whitelabel' }
+			'updateWelcome': { verb: 'POST', url: 'accounts/{accountId}/whitelabel/welcome', type: 'text/html', dataType: 'html' },
+			'create': { verb: 'PUT', url: 'accounts/{accountId}/whitelabel' },
+			'delete': { verb: 'DELETE', url: 'accounts/{accountId}/whitelabel' },
+			'listNotifications': { verb: 'GET', url: 'accounts/{accountId}/notifications' },
+			'getNotification': { verb: 'GET', url: 'accounts/{accountId}/notifications/{notificationId}' },
+			'getNotificationText': { verb: 'GET', url: 'accounts/{accountId}/notifications/{notificationId}', type: 'text/plain', dataType: 'text' },
+			'getNotificationHtml': { verb: 'GET', url: 'accounts/{accountId}/notifications/{notificationId}', type: 'text/html', dataType: 'html' },
+			'updateNotification': { verb: 'POST', url: 'accounts/{accountId}/notifications/{notificationId}' },
+			'updateNotificationText': { verb: 'POST', url: 'accounts/{accountId}/notifications/{notificationId}', type: 'text/plain', dataType: 'text' },
+			'updateNotificationHtml': { verb: 'POST', url: 'accounts/{accountId}/notifications/{notificationId}', type: 'text/html', dataType: 'html' },
+			'previewNotification': { verb: 'POST', url: 'accounts/{accountId}/notifications/{notificationId}/preview' }
 		}
 	},
 	authTokens = {};
@@ -346,7 +361,7 @@
 
 			var parsedError = error;
 
-			if('responseText' in error && error.responseText) {
+			if('responseText' in error && error.responseText && error.getResponseHeader('content-type') === 'application/json') {
 				parsedError = $.parseJSON(error.responseText);
 			}
 

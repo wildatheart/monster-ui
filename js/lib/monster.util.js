@@ -11,55 +11,56 @@ define(function(require){
 		   	This function will show a warning popup %alertBeforeLogout% minutes before logging out (defaults to 2). If the user moves his cursor, the timer will reset.
 		*/
 		autoLogout: function() {
-			var i18n = monster.apps['core'].i18n.active(),
-				timerAlert,
-				timerLogout,
-			    wait=15,
-			    alertBeforeLogout=2,
-			    alertTriggered = false,
-			    alertDialog;
+			if(!monster.config.hasOwnProperty('logoutTimer') || monster.config.logoutTimer > 0) {
+				var i18n = monster.apps['core'].i18n.active(),
+					timerAlert,
+					timerLogout,
+					wait = monster.config.logoutTimer || 15,
+					alertBeforeLogout = 2,
+					alertTriggered = false,
+					alertDialog,
+					logout = function()	{
+						monster.pub('auth.logout');
+					},
+					resetTimer = function() {
+						clearTimeout(timerAlert);
+						clearTimeout(timerLogout);
 
-			var logout = function()	{
-				monster.pub('auth.logout');
-			};
+						if(alertTriggered) {
+							alertTriggered = false;
 
-			var resetTimer = function() {
-    			clearTimeout(timerAlert);
-    			clearTimeout(timerLogout);
+							alertDialog.dialog('close').remove();
+						}
 
-    			if(alertTriggered) {
-    				alertTriggered = false;
+						timerAlert=setTimeout(function() {
+							alertTriggered = true;
 
-    				alertDialog.dialog('close').remove();
-    			}
+							alertDialog = monster.ui.alert(i18n.alertLogout);
+						}, 60000*(wait-alertBeforeLogout));
 
-				timerAlert=setTimeout(function() {
-					alertTriggered = true;
+						timerLogout=setTimeout(function() {
+							logout();
+						}, 60000*wait);
+					};
 
-					alertDialog = monster.ui.alert(i18n.alertLogout);
-				}, 60000*(wait-alertBeforeLogout));
+				document.onkeypress = resetTimer;
+				document.onmousemove = resetTimer;
 
-    			timerLogout=setTimeout(function() {
-					logout();
-				}, 60000*wait);
-			};
-
-			document.onkeypress = resetTimer;
-			document.onmousemove = resetTimer;
-
-			resetTimer();
+				resetTimer();
+			}
 		},
 
 		/* Set the default Language to English, and overrides it with the language from the browser. If a cookie exists, we override the language value with the value stored in the cookie) */
 		setDefaultLanguage: function() {
-			var defaultLanguage = navigator.language || 'en-US';
+			var browserLanguage = (navigator.language).replace(/-.*/,function(a){return a.toUpperCase();}), // always capitalize the second part of the navigator language
+				defaultLanguage = browserLanguage || 'en-US';
 
-			monster.config.language = monster.config.language || defaultLanguage;
+			monster.config.whitelabel.language = monster.config.whitelabel.language || defaultLanguage;
 
 			if($.cookie('monster-auth')) {
 				var authData = $.parseJSON($.cookie('monster-auth'));
 
-				monster.config.language = authData.language;
+				monster.config.whitelabel.language = authData.language;
 			};
 		},
 
@@ -80,56 +81,80 @@ define(function(require){
 			}
 		},
 
-		toFriendlyDate: function(timestamp, type) {
-			var self = this,
-				parsedDate = '-';
+		toFriendlyDate: function(timestamp, format){
+			var self = this;
 
-			if(timestamp) {
-				var today = new Date(),
+			if (typeof timestamp === 'number') {
+				var i18n = monster.apps.core.i18n.active(),
+					format2Digits = function(number) {
+						return number < 10 ? '0'.concat(number) : number;
+					},
+					today = new Date(),
 					todayYear = today.getFullYear(),
-					todayMonth = today.getMonth() + 1 < 10 ? '0' + (today.getMonth() + 1) : today.getMonth() + 1,
-					todayDay = today.getDate() < 10 ? '0' + today.getDate() : today.getDate(),
+					todayMonth = format2Digits(today.getMonth() + 1),
+					todayDay = format2Digits(today.getDate()),
 					date = self.gregorianToDate(timestamp),
-					month = date.getMonth() +1,
-					year = date.getFullYear(),
-					day = date.getDate(),
-					hours = date.getHours(),
-					minutes = date.getMinutes();
+					year = date.getFullYear().toString().substr(2, 2),
+					fullYear = date.getFullYear(),
+					month = format2Digits(date.getMonth() + 1),
+					calendarMonth = i18n.calendar.month[date.getMonth()],
+					day = format2Digits(date.getDate()),
+					weekDay = i18n.calendar.day[date.getDay()],
+					hours = format2Digits(date.getHours()),
+					minutes = format2Digits(date.getMinutes()),
+					seconds = format2Digits(date.getSeconds()),
+					patterns = {
+						'year': fullYear,
+						'YY': year,
+						'month': calendarMonth,
+						'MM': month,
+						'day': weekDay,
+						'DD': day,
+						'hh': hours,
+						'mm': minutes,
+						'ss': seconds
+					};
 
-				if(hours >= 12) {
-					if(hours !== 12) {
-						hours-=12;
+				if (format) {
+					if (format === 'short') {
+						format = 'MM/DD/year'
 					}
-					suffix = ' PM';
 				}
 				else {
-					if(hours === 0) {
-						hours = 12;
+					format = 'MM/DD/year - hh:mm12h'
+				}
+
+				if (format.indexOf('12h') > -1) {
+					var suffix;
+
+					if (hours >= 12) {
+						if (hours !== 12) {
+							hours -= 12;
+						}
+
+						suffix = i18n.calendar.suffix.pm;
 					}
-					suffix = ' AM';
+					else {
+						if (hours === '00') {
+							hours = 12
+						}
+
+						suffix = i18n.calendar.suffix.am;
+					}
+
+					patterns.hh = hours;
+					patterns['12h'] = suffix;
 				}
 
-				day = day < 10 ? '0' + day : day;
-				month = month < 10 ? '0' + month : month;
-				hours = hours < 10 ? '0'+ hours : hours;
-				minutes = minutes < 10 ? '0'+ minutes : minutes;
+				_.each(patterns, function(v, k){
+					format = format.replace(k, v);
+				});
 
-				var humanDate = month+'/'+day+'/'+year,
-					humanTime = hours + ':' + minutes + suffix;
-
-				if(todayYear === year && todayMonth === month && todayDay === day && type !== 'short' && type !== 'standard') {
-					humanDate = 'Today';
-				}
-
-				if(type === 'short') {
-					parsedDate = humanDate;
-				}
-				else {
-					parsedDate = humanDate + ' - ' + humanTime;
-				}
+				return format;
 			}
-
-			return parsedDate;
+			else {
+				console.log('Timestamp should be a number');
+			}
 		},
 
 		friendlyTimer: function(seconds) {
@@ -352,6 +377,49 @@ define(function(require){
 			};
 
 			return result;
+		},
+
+		/**
+		 * @desc add or remove business days to the current date or to a specific date
+		 * @param numberOfDays - mandatory integer representing the number of business days to add
+		 * @param from - optional JavaScript Date Object
+		 */
+		getBusinessDate: function(numberOfDays, from) {
+			var self = this,
+				from = from && from instanceof Date ? from : new Date(),
+				weeks = Math.floor(numberOfDays / 5),
+				days = ((numberOfDays % 5) + 5) % 5,
+				dayOfTheWeek = from.getDay();
+
+			if (dayOfTheWeek === 6 && days > -1) {
+				if (days === 0) {
+					days -= 2;
+					dayOfTheWeek += 2;
+				}
+
+				days++;
+				dayOfTheWeek -= 6;
+			}
+
+			if (dayOfTheWeek === 0 && days < 1) {
+				if (days === 0) {
+					days += 2;
+					dayOfTheWeek -= 2;
+				}
+
+				days--;
+				dayOfTheWeek += 6;
+			}
+
+			if (dayOfTheWeek + days > 5) {
+				days += 2;
+			}
+
+			if (dayOfTheWeek + days < 1) {
+				days -= 2;
+			}
+
+			return new Date(from.setDate(from.getDate() + weeks * 7 + days));
 		}
 	};
 

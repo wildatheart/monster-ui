@@ -103,30 +103,8 @@ define(function(require){
 		}
 	});
 
-	Handlebars.registerHelper('formatTimestamp', function(timestamp, format) {
-		if (/^6[0-9]{10}$/.test(timestamp)) {
-			timestamp = monster.util.gregorianToDate(timestamp);
-		}
-
-		var timestamp = new Date(timestamp),
-			fullYear = timestamp.getFullYear(),
-			year = timestamp.getFullYear().toString().substr(2, 2),
-			month = timestamp.getMonth() + 1,
-			day = timestamp.getDate(),
-			hours = timestamp.getHours(),
-			minutes = timestamp.getMinutes() < 10 ? '0' + timestamp.getMinutes() : timestamp.getMinutes(),
-			seconds = timestamp.getSeconds() < 10 ? '0' + timestamp.getSeconds() : timestamp.getSeconds(),
-			format = _.isString(format) ? format : 'MM/DD/YY hh:mm:ss';
-
-		format = format.replace(/YYYY/, fullYear);
-		format = format.replace(/YY/, year);
-		format = format.replace(/MM/, month);
-		format = format.replace(/DD/, day);
-		format = format.replace(/hh/, hours);
-		format = format.replace(/mm/, minutes);
-		format = format.replace(/ss/, seconds);
-
-		return format;
+	Handlebars.registerHelper('toFriendlyDate', function(timestamp, format) {
+		return monster.util.toFriendlyDate(timestamp, format);
 	});
 
 	$.widget("ui.dialog", $.extend({}, $.ui.dialog.prototype, {
@@ -792,245 +770,310 @@ define(function(require){
 		/**
 		 * @desc prepend a WYSIWYG in 'target'
 		 * @param target - mandatory jQuery Object
-		 * @param options - optional Javascript Object
+		 * @param options - optional JavaScript Object or JavaScript Boolean
 		 *
-		 * To remove elements from the toolbar, specify false as value
-		 * for the corresponding key in the defaultOptions object.
+		 * To remove some elements from the toolbar, specify false as value
+		 * for the corresponding key in the defaultOptions object. To remove
+		 * all elements, set the options parameter to false.
 		 * 
 		 * The target should be a jQuery Object as follow:
 		 * <div class="wysiwyg-container"></div>
-		 * The optional class "filled" can be added to this container
-		 * to change the style of the toolbar.
+		 * The optional class "transparent" can be added to this container
+		 * to change the background of the toolbar.
 		 */
 		wysiwyg: function(target, options) {
 			var self = this,
-				options = options || {},
-				id = new Date().getTime(),
+				options = _.isBoolean(options) ? options : options || {},
+				id = Date.now(),
 				coreApp = monster.apps.core,
-				i18n = coreApp.i18n.active().wysiwyg,
-				defaultOptions = {
-					tools: {
+				dataTemplate = { id: id },
+				wysiwygTemplate;
+
+			if (options) {
+				var i18n = coreApp.i18n.active().wysiwyg,
+					colorList = [
+						'ffffff','000000','eeece1','1f497d','4f81bd','c0504d','9bbb59','8064a2','4bacc6','f79646','ffff00',
+						'f2f2f2','7f7f7f','ddd9c3','c6d9f0','dbe5f1','f2dcdb','ebf1dd','e5e0ec','dbeef3','fdeada','fff2ca',
+						'd8d8d8','595959','c4bd97','8db3e2','b8cce4','e5b9b7','d7e3bc','ccc1d9','b7dde8','fbd5b5','ffe694',
+						'bfbfbf','3f3f3f','938953','548dd4','95b3d7','d99694','c3d69b','b2a2c7','92cdcd','fac08f','f2c314',
+						'a5a5a5','262626','494429','17365d','366092','953734','76923c','5f497a','31859b','e36c09','c09100',
+						'7f7f7f','0c0c0c','1d1b10','0f243e','244061','632423','4f6128','3f3151','205867','974806','7f6000'
+					],
+					defaultOptions = {
 						fontSize: {
+							weight: 10,
 							title: i18n.title.fontSize,
-							icon: 'text-height',
+							icon: 'icon-text-height',
+							command: 'fontSize',
 							options: {
 								small: {
-									title: i18n.title.small,
-									command: 'fontSize',
+									weight: 10,
+									text: i18n.text.small,
 									args: '1'
 								},
 								normal: {
-									title: i18n.title.normal,
-									command: 'fontSize',
+									weight: 20,
+									text: i18n.text.normal,
 									args: '3'
 								},
-								huge: {
-									title: i18n.title.huge,
-									command: 'fontSize',
+								big: {
+									weight: 30,
+									text: i18n.text.big,
 									args: '5'
 								}
 							}
 						},
 						fontEffect: {
-							bold: {
-								title: i18n.title.bold,
-								icon: 'bold',
-								command: 'bold'
-							},
-							italic: {
-								title: i18n.title.italic,
-								icon: 'italic',
-								command: 'italic'
-							},
-							underline: {
-								title: i18n.title.underline,
-								icon: 'underline',
-								command: 'underline'
-							},
-							strikethrough: {
-								title: i18n.title.strikethrough,
-								icon: 'strikethrough',
-								command: 'strikethrough'
+							weight: 20,
+							options: {
+								bold: {
+									weight: 10,
+									title: i18n.title.bold,
+									icon: 'icon-bold',
+									command: 'bold'
+								},
+								italic: {
+									weight: 20,
+									title: i18n.title.italic,
+									icon: 'icon-italic',
+									command: 'italic'
+								},
+								underline: {
+									weight: 30,
+									title: i18n.title.underline,
+									icon: 'icon-underline',
+									command: 'underline'
+								},
+								strikethrough: {
+									weight: 40,
+									title: i18n.title.strikethrough,
+									icon: 'icon-strikethrough',
+									command: 'strikethrough'
+								}
 							}
 						},
 						fontColor: {
+							weight: 30,
 							title: i18n.title.fontColor,
-							icon: 'font',
+							icon: 'icon-font',
 							command: 'foreColor',
-							options: [
-								'ffffff','000000','eeece1','1f497d','4f81bd','c0504d','9bbb59','8064a2','4bacc6','f79646','ffff00',
-								'f2f2f2','7f7f7f','ddd9c3','c6d9f0','dbe5f1','f2dcdb','ebf1dd','e5e0ec','dbeef3','fdeada','fff2ca',
-								'd8d8d8','595959','c4bd97','8db3e2','b8cce4','e5b9b7','d7e3bc','ccc1d9','b7dde8','fbd5b5','ffe694',
-								'bfbfbf','3f3f3f','938953','548dd4','95b3d7','d99694','c3d69b','b2a2c7','b7dde8','fac08f','f2c314',
-								'a5a5a5','262626','494429','17365d','366092','953734','76923c','5f497a','92cddc','e36c09','c09100',
-								'7f7f7f','0c0c0c','1d1b10','0f243e','244061','632423','4f6128','3f3151','31859b','974806','7f6000'
-							]
+							options: [],
+							ante: '#'
 						},
 						textAlign: {
+							weight: 40,
 							title: i18n.title.alignment,
-							icon: 'file-text',
+							icon: 'icon-file-text',
 							options: {
 								left: {
+									weight: 10,
 									title: i18n.title.alignLeft,
-									icon: 'align-left',
+									icon: 'icon-align-left',
 									command: 'justifyLeft'
 								},
 								center: {
+									weight: 20,
 									title: i18n.title.center,
-									icon: 'align-center',
+									icon: 'icon-align-center',
 									command: 'justifyCenter'
 								},
 								right: {
+									weight: 30,
 									title: i18n.title.alignRight,
-									icon: 'align-right',
+									icon: 'icon-align-right',
 									command: 'justifyRight'
 								},
 								justify: {
+									weight: 40,
 									title: i18n.title.justify,
-									icon: 'align-justify',
+									icon: 'icon-align-justify',
 									command: 'justifyFull'
 								}
 							}
 						},
 						list: {
+							weight: 50,
 							title: i18n.title.list,
-							icon: 'list',
+							icon: 'icon-list',
 							options: {
 								unordered: {
+									weight: 10,
 									title: i18n.title.bulletList,
-									icon: 'list-ul',
+									icon: 'icon-list-ul',
 									command: 'insertUnorderedList'
 								},
 								ordered: {
+									weight: 20,
 									title: i18n.title.numberList,
-									icon: 'list-ol',
+									icon: 'icon-list-ol',
 									command: 'insertOrderedList'
 								}
 							}
 						},
-						indentation: {
-							indent: {
-								title: i18n.title.indent,
-								icon: 'indent-right',
-								command: 'indent'
-							},
-							outdent: {
-								title: i18n.title.reduceIndent,
-								icon: 'indent-left',
-								command: 'outdent'
+						textIndent: {
+							weight: 60,
+							options: {
+								indent: {
+									weight: 10,
+									title: i18n.title.indent,
+									icon: 'icon-indent-right',
+									command: 'indent'
+								},
+								outdent: {
+									weight: 20,
+									title: i18n.title.reduceIndent,
+									icon: 'icon-indent-left',
+									command: 'outdent'
+								}
 							}
 						},
 						link: {
-							create: {
-								title: i18n.title.hyperlink,
-								icon: 'link',
-								command: 'createLink'
-							},
-							delete: {
-								title: i18n.title.removeHyperlink,
-								icon: 'unlink',
-								command: 'unlink'
-							},
+							weight: 70,
+							options: {
+								create: {
+									weight: 10,
+									title: i18n.title.createLink,
+									icon: 'icon-link',
+									command: 'createLink'
+								},
+								delete: {
+									weight: 20,
+									title: i18n.title.removeLink,
+									icon: 'icon-unlink',
+									command: 'unlink'
+								}
+							}
 						},
 						image: {
+							weight: 80,
 							title: i18n.title.upload,
-							icon: 'picture',
+							icon: 'icon-picture',
 							command: 'insertImage'
 						},
 						editing: {
-							undo: {
-								title: i18n.title.undo,
-								icon: 'undo',
-								command: 'undo'
-							},
-							redo: {
-								title: i18n.title.redo,
-								icon: 'repeat',
-								command: 'redo'
+							weight: 90,
+							options: {
+								undo: {
+									weight: 10,
+									title: i18n.title.undo,
+									icon: 'icon-undo',
+									command: 'undo'
+								},
+								redo: {
+									weight: 20,
+									title: i18n.title.redo,
+									icon: 'icon-repeat',
+									command: 'redo'
+								}
 							}
 						},
 						horizontalRule: {
+							weight: 100,
 							title: i18n.title.horizontalRule,
-							icon: 'minus',
+							icon: 'icon-minus',
 							command: 'insertHorizontalRule'
 						},
 						macro: {
+							weight: 999,
 							title: i18n.title.macro,
 							command: 'insertHtml',
-							options: {
-								user_first_name: 'User\'s First Name',
-								user_last_name: 'User\'s Last Name',
-								user_pin: 'User\'s PIN',
-								conference_name: 'Conference\'s Name',
-								conference_date: 'Conference\'s Date',
-								conference_time: 'Conference\'s Time',
-								conference_record: 'Conference\'s Record'
+							options: false,
+							ante: '<b>{{',
+							post: '}}</b>'
+						}
+					},
+					sortByWeight = function(node) { // Sort elements by weight and "arrayize"
+						node = _.map(node, function(v, k) { return v; });
+
+						node.sort(function(a, b){
+							return a.weight > b.weight ? 1 : -1;
+						});
+
+						_.each(node, function(v, k) {
+							if (v.hasOwnProperty('options')) {
+								v.options = sortByWeight(v.options);
+							}
+						});
+
+						return node;
+					};
+
+				colorList.forEach(function(hexColor, idx) {
+					defaultOptions.fontColor.options.push({ weight: ++idx * 10, args: hexColor });
+				})
+
+				options = $.extend(true, {}, defaultOptions, options);
+
+				// Remove options with value at false
+				for (var c in options) {
+					if (!options[c]) {
+						delete options[c];
+						continue;
+					}
+					else if (options[c].hasOwnProperty('options')) {
+						if (_.isEmpty(options[c].options)) {
+							delete options[c];
+							continue;
+						}
+						else {
+							_.each(options[c].options, function(v, k, l){
+								if (!v) {
+									delete l[k];
+								}
+							});
+
+							if (_.isEmpty(options[c].options)) {
+								delete options[c];
+								continue;
 							}
 						}
 					}
-				},
-				wysiwygTemplate;
-
-			options = $.extend(true, {}, defaultOptions, options, { id: id });
-
-			for (var category in options.tools) {
-				if (!options.tools[category]) {
-					delete options.tools[category];
 				}
-				else if (options.tools[category].hasOwnProperty('options') && _.isEmpty(options.tools[category].options)) {
-					delete options.tools[category];
-				}
-				else if (!options.tools[category].hasOwnProperty('title')) {
-					var show = false;
 
-					for (var option in options.tools[category]) {
-						if (options.tools[category][option]) {
-							show = true;
-							break;
-						}
-					}
+				dataTemplate.tools = sortByWeight(options);
 
-					if (!show) {
-						delete options.tools[category];
-					}
+				wysiwygTemplate = $(monster.template(coreApp, 'wysiwyg-template', dataTemplate));
+
+				wysiwygTemplate
+					.find('a[title]')
+					.tooltip({container: 'body'});
+
+				if (options.hasOwnProperty('fontColor')) {
+					wysiwygTemplate.find('.color-menu a').each(function(idx, el) {
+						$(el).css('background-color', $(el).data('edit').split(' ').pop());
+					});
 				}
+
+				// Handle the behavior of the creatLink dropdown menu
+				wysiwygTemplate.find('.dropdown-menu input')
+					.on('click', function() {
+						return false;
+					})
+					.on('change', function() {
+						$(this).parent('.dropdown-menu').siblings('.dropdown-toggle').dropdown('toggle');
+					})
+					.keydown('esc', function() {
+						this.value = '';
+						$(this).change();
+					});
+			}
+			else {
+				wysiwygTemplate = $(monster.template(coreApp, 'wysiwyg-template', dataTemplate));
 			}
 
-			wysiwygTemplate = $(monster.template(coreApp, 'wysiwyg-template', options));
-
-			wysiwygTemplate
-				.find('a[title]')
-				.tooltip({container: 'body'});
-
-			/* Handle the behavior of the creatLink dropdown menu */
-			wysiwygTemplate.find('.dropdown-menu input')
-				.on('click', function() {
-					return false;
-				})
-				.on('change', function() {
-					$(this).parent('.dropdown-menu').siblings('.dropdown-toggle').dropdown('toggle');
-				})
-				.keydown('esc', function() {
-					this.value = '';
-					$(this).change();
-				});
-
-			target
-				.prepend(wysiwygTemplate)
-				.find('#wysiwyg_editor_' + id)
-				.wysiwyg({
-					toolbarSelector: '#wysiwyg_toolbar_' + id,
-					activeToolbarClass: 'selected',
-					fileUploadError: function(reason, detail) {
-						if (reason === 'unsupported-file-type') {
-							toastr.error(detail + i18n.toastr.error.format);
+			return target.prepend(wysiwygTemplate).find('#wysiwyg_editor_' + id).wysiwyg({
+						toolbarSelector: '#wysiwyg_toolbar_' + id,
+						activeToolbarClass: 'selected',
+						fileUploadError: function(reason, detail) {
+							if (reason === 'unsupported-file-type') {
+								toastr.error(detail + i18n.toastr.error.format);
+							}
+							else {
+								toastr.error(i18n.toastr.error.upload);
+								console.log('error uploading file', reason, detail);
+							}
 						}
-						else {
-							toastr.error(i18n.toastr.error.upload);
-							console.log('error uploading file', reason, detail);
-						}
-					}
-				});
+					});
 		}
 	};
 

@@ -8,7 +8,12 @@ define(function(require){
 
 		name: 'auth',
 
-		i18n: [ 'en-US', 'fr-FR' ],
+		css: [ 'app' ],
+
+		i18n: { 
+			'en-US': { customCss: false },
+			'fr-FR': { customCss: false }
+		},
 
 		requests: {
 			'auth.userAuth': {
@@ -46,9 +51,12 @@ define(function(require){
 
 		load: function(callback){
 			var self = this,
-				mainContainer = $('#ws-content');
+				mainContainer = $('#monster-content');
 
 			self.getWhitelabel(function(data) {
+				// Merge the whitelabel info to replace the hardcoded info
+				monster.config.whitelabel = $.extend(true, {}, monster.config.whitelabel, data);
+
 				if(!$.cookie('monster-auth')) {
 					if('authentication' in data) {
 						self.customAuth = data.authentication;
@@ -207,7 +215,7 @@ define(function(require){
 
 			$.cookie('monster-auth', JSON.stringify(cookieAuth));
 
-			$('#ws-content').empty();
+			$('#monster-content').empty();
 
 			self.afterLoggedIn();
 		},
@@ -337,10 +345,10 @@ define(function(require){
 					/* If user has a preferred language, then set the i18n flag with this value, and download the customized i18n
 					if not, check if the account has a default preferred language */
 					var loadCustomLanguage = function(language, callback) {
-						if(language !== monster.config.language) {
+						if(language !== monster.config.whitelabel.language) {
 							monster.apps.loadLocale(monster.apps.core, language, function() {
 								monster.apps.loadLocale(self, language, function() {
-									monster.config.language = language;
+									monster.config.whitelabel.language = language;
 
 									callback && callback();
 								});
@@ -565,14 +573,14 @@ define(function(require){
 					self.isReseller = data.data.is_reseller;
 					self.resellerId = data.data.reseller_id;
 
-					$('#ws-content').empty();
+					$('#monster-content').empty();
 
 					monster.apps.load('conferences', function(app) {
 						app.userType = 'unregistered';
 						app.user = formData;
 						app.isModerator = data.data.is_moderator;
 						app.conferenceId = data.data.conference_id;
-						app.render($('#ws-content'));
+						app.render($('#monster-content'));
 					});
 				},
 				error: function(apiResponse, rawError) {
@@ -643,7 +651,7 @@ define(function(require){
 					generateError: false
 				},
 				success: function(_data) {
-					callback && callback(_data);
+					callback && callback(_data.data);
 				},
 				error: function(err) {
 					callback && callback({});

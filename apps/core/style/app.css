@@ -1126,13 +1126,14 @@ label.monster-invalid {
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
-	border: 1px solid transparent;
+	border: 1px solid #ccc;
 	border-bottom: 0;
+	background-color: #eee
 }
 
-.wysiwyg-container.filled .wysiwyg-toolbar {
-	border-color: #ccc;
-	background-color: #eee
+.wysiwyg-container.transparent .wysiwyg-toolbar {
+	border-color: transparent;
+	background-color: transparent;
 }
 
 .wysiwyg-container .wysiwyg-toolbar .btn-group {
@@ -1178,6 +1179,10 @@ label.monster-invalid {
 }
 .wysiwyg-container .wysiwyg-toolbar .btn-group .dropdown-menu .btn:last-child {
 	margin-right: 5px;
+}
+
+.wysiwyg-container .wysiwyg-toolbar .btn-group .dropdown-menu input {
+	margin-left: 5px;
 }
 
 .wysiwyg-container .wysiwyg-toolbar .btn-group .dropdown-menu i {
@@ -1227,4 +1232,9 @@ label.monster-invalid {
 	background-color: #FFF;
 	-webkit-box-shadow: rgba(0, 0, 0, 0.0745098) 0px 1px 1px 0px inset;
 	box-shadow: rgba(0, 0, 0, 0.0745098) 0px 1px 1px 0px inset;
+	font-size: 16px;
+}
+
+.wysiwyg-container .wysiwyg-editor i {
+	font-size: inherit;
 }
